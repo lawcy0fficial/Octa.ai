@@ -1,0 +1,31 @@
+{
+  "_NOTE": "Fill in your own keys below. You only need ONE provider to get started — Ollama also works with zero cloud keys.",
+  "_LINKS": {
+    "openrouter":  "https://openrouter.ai/keys",
+    "cerebras":    "https://cloud.cerebras.ai",
+    "grok":        "https://x.ai/api",
+    "gemini":      "https://aistudio.google.com/apikey",
+    "requesty":    "https://requesty.ai",
+    "novita":      "https://novita.ai",
+    "huggingface": "https://huggingface.co/settings/tokens"
+  },
+  "openrouter": [
+    
+  ],
+  "cerebras": [
+    
+  ],
+  
+  "novita": [
+    
+  ],
+  "pollinations": [""],
+  "gemini": [
+   
+  ],
+  "huggingface": [""],
+  "grok": [
+    
+  ],
+  "cloudflare": [""]
+}

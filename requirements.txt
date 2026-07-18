@@ -1,0 +1,52 @@
+# ══════════════════════════════════════════════════════════════
+# CORE — required by the code that ships in this repo
+# ══════════════════════════════════════════════════════════════
+
+# AI provider routing (agent.py, bridge.py, keys.py, chainlit_app.py)
+litellm>=1.40.0
+
+# Web & API (bridge.py, mcp_master.py's HTTP calls)
+fastapi>=0.110.0
+uvicorn>=0.29.0
+requests>=2.31.0
+
+# Chat UI (chainlit_app.py)
+chainlit>=1.0.0
+
+# Persistent memory (memory.py) — ChromaDB ships its own bundled
+# embedding model (onnxruntime), no separate ML package needed.
+chromadb>=0.5.0
+
+# MCP server (mcp_master.py) — needs the FastMCP API.
+mcp>=1.2.0
+
+# Report output: PDF / DOCX (outputs.py)
+fpdf2>=2.7.0
+python-docx>=1.1.0
+
+# Web search / OSINT (websearch.py). The old "duckduckgo-search"
+# package was renamed to "ddgs"; websearch.py tries both at runtime,
+# but installing the current name avoids the deprecation warning.
+ddgs>=8.0.0
+tavily-python>=0.3.0
+arxiv>=2.1.0
+wikipedia>=1.4.0
+
+# Data / charts (specialized.py's data-analysis tool)
+pandas>=2.2.0
+matplotlib>=3.8.0
+pillow>=10.0.0
+
+# ══════════════════════════════════════════════════════════════
+# OPTIONAL — not imported by any module in this repo today.
+# Install only if you plan to extend the project with these.
+# Left commented out because they are large/slow installs
+# (sentence-transformers and TTS both pull in PyTorch) and are
+# easy sources of a failed setup if left uncommented by default.
+# ══════════════════════════════════════════════════════════════
+# openai>=1.0.0
+# langchain>=0.2.0
+# gradio>=4.0.0
+# streamlit>=1.32.0
+# sentence-transformers>=2.7.0
+# TTS>=0.22.0

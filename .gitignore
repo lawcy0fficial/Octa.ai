@@ -1,0 +1,45 @@
+# OCTA AI .gitignore
+
+# API Keys — NEVER commit real keys!
+keys.json
+
+# Generated outputs
+outputs/
+reports/
+memory/
+*.pdf
+*.docx
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+venv/
+env/
+.env
+
+# Ollama models (too large)
+*.gguf
+*.bin
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+
+# Temp
+/tmp/
+*.tmp
