@@ -56,15 +56,21 @@
 </tr>
 <tr>
 <td align="center">📊<br/><a href="#-free-api-capacity">API Capacity</a></td>
+<td align="center">🧭<br/><a href="#-how-the-router-works">Router Logic</a></td>
+<td align="center">🖥️<br/><a href="#️-example-session">Example Session</a></td>
 <td align="center">⚖️<br/><a href="#️-octa-ai-vs-the-alternatives">Comparison</a></td>
-<td align="center">🔐<br/><a href="#-security-research-modules">Security</a></td>
-<td align="center">🗺️<br/><a href="#️-roadmap">Roadmap</a></td>
 </tr>
 <tr>
+<td align="center">🔐<br/><a href="#-security-research-modules">Security</a></td>
+<td align="center">🗺️<br/><a href="#️-roadmap">Roadmap</a></td>
 <td align="center">🛠️<br/><a href="#️-tech-stack">Tech Stack</a></td>
 <td align="center">📁<br/><a href="#-project-structure">Structure</a></td>
+</tr>
+<tr>
 <td align="center">🧯<br/><a href="#-troubleshooting">Troubleshooting</a></td>
+<td align="center">📖<br/><a href="#-glossary">Glossary</a></td>
 <td align="center">❓<br/><a href="#-faq">FAQ</a></td>
+<td align="center">🌟<br/><a href="#-support-the-project">Support</a></td>
 </tr>
 </table>
 
@@ -113,6 +119,20 @@ mindmap
 
 > [!NOTE]
 > **Zero-cost by design.** Every cloud provider wired into OCTA AI (OpenRouter, Cerebras, Grok/xAI, Gemini, Requesty, Novita, HuggingFace) is used strictly on its free tier, rotated across multiple keys per provider. When cloud quota runs dry, it falls back to **local Ollama** — unlimited, private, offline.
+
+<div align="center">
+
+### 📊 By The Numbers
+
+<img src="https://img.shields.io/badge/22-Files-00d4ff?style=for-the-badge&labelColor=0d1117"/>
+<img src="https://img.shields.io/badge/~5,000-Lines%20of%20Python-7c3aed?style=for-the-badge&labelColor=0d1117"/>
+<img src="https://img.shields.io/badge/42-MCP%20Tools-00ff88?style=for-the-badge&labelColor=0d1117"/>
+<img src="https://img.shields.io/badge/7-Cloud%20Providers-ff2e88?style=for-the-badge&labelColor=0d1117"/>
+<img src="https://img.shields.io/badge/54-Rotating%20API%20Keys-f59e0b?style=for-the-badge&labelColor=0d1117"/>
+<img src="https://img.shields.io/badge/1-Solo%20Developer-00d4ff?style=for-the-badge&labelColor=0d1117"/>
+<img src="https://img.shields.io/badge/0-Paid%20APIs-39ff14?style=for-the-badge&labelColor=0d1117"/>
+
+</div>
 
 ---
 
@@ -210,6 +230,44 @@ Every phase except execution rotates across free cloud APIs to spread load and d
 - There are **no upstream content filters** interrupting a legitimate, authorized security-research task mid-loop
 
 </details>
+
+---
+
+## 🧭 How The Router Works
+
+`keys.py` is the shared brain every module imports `call_ai()` from. It doesn't just pick "an AI" — it picks the **right pool of models for the phase**, then rotates through providers and keys until one answers.
+
+<div align="center">
+
+| Pool | Used by | Primary models | Purpose |
+|:--|:--|:--|:--|
+| `DISCUSSION_POOL` | Discussion phase | Live OpenRouter free models → Gemini 2.5 Flash → Grok → Cerebras Llama 3.3 70B | Best reasoning quality |
+| `PLANNING_POOL` | Planning phase | Cerebras Llama 3.3 70B → Gemini 2.5 Flash → Grok → OpenRouter | Fastest response time |
+| `EXECUTION_POOL` | Execution phase | `ollama/phi3:mini` → `ollama/qwen2.5:3b` → `ollama/llama3.2:3b` | Local-only, unlimited |
+| `REVIEW_POOL` | Review phase | Live OpenRouter free models → Gemini → Cerebras → Grok | Best quality polish |
+| `VISION_POOL` | Image analysis | Gemini 2.5 Flash | Only pool provider with vision support |
+| `ONLINE_POOL` | General fallback | Live OpenRouter free models + Cerebras + Gemini + Grok | Catch-all cloud pool |
+
+</div>
+
+The OpenRouter slice of every cloud pool is **fetched live** on startup rather than hardcoded — free `:free` model slugs on OpenRouter get added and retired without notice, so `keys.py` pulls the current list and falls back to an offline cached list only if that fetch fails.
+
+```mermaid
+stateDiagram-v2
+    [*] --> TryProvider
+    TryProvider --> Success: response OK
+    TryProvider --> RotateKey: auth / rate-limit error
+    RotateKey --> TryProvider: next key in pool (up to 12 retries)
+    TryProvider --> NextProvider: provider exhausted
+    NextProvider --> TryProvider
+    RotateKey --> AllFailed: retries exhausted
+    AllFailed --> LocalOllama: silent fallback
+    LocalOllama --> Success
+    Success --> [*]
+```
+
+> [!TIP]
+> `call_ai()` defaults to **12 retries** across rotating keys before giving up on the cloud entirely — in practice this means a single exhausted key almost never surfaces as an error to you; the router just quietly moves to the next one.
 
 ---
 
@@ -447,6 +505,35 @@ bash start_all.sh
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0:00C9FF,100:8E2DE2&height=3&width=100%25" width="100%"/>
 
+## 🖥️ Example Session
+
+<div align="center"><i>What a real run through the 4-phase loop looks like from the CLI.</i></div>
+<br/>
+
+```console
+$ python3 agent.py
+🐙 OCTA AI v1.0 — 4-Phase Agentic System
+Providers online: OpenRouter ×10 · Cerebras ×9 · Grok ×9 · Gemini ×7 · Requesty ×10 · Novita ×8 · Ollama ♾️
+
+> Scan example-test-target.local for open ports and summarize risk
+
+🧠 DISCUSSION   [openrouter/<live-free-model>]  → interpreting request, checking scope confirmation
+📋 PLANNING     [cerebras/llama3.3-70b]         → blueprint: nmap_scan → nuclei_scan → get_cve → save_report
+⚙️  EXECUTION    [ollama/qwen2.5:3b]             → running nmap_scan(target="example-test-target.local")
+   → 3 open ports found: 22/tcp, 80/tcp, 443/tcp
+⚙️  EXECUTION    [ollama/qwen2.5:3b]             → running nuclei_scan(severity="critical,high")
+   → 1 medium finding: outdated TLS cipher suite on 443/tcp
+✅ REVIEW       [gemini/gemini-2.5-flash]        → polishing findings, assigning CVSS context
+📄 REPORT       → saved to reports/example-test-target-2026-07-18.pdf
+
+Done in 4 phases · 6 tool calls · $0.00 spent
+```
+
+> [!NOTE]
+> Output above is illustrative formatting only — actual model names, ports, and findings will reflect your real target and current live provider list.
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:8E2DE2,100:00C9FF&height=3&width=100%25" width="100%"/>
+
 ## 💬 Agent Commands
 
 <div align="center">
@@ -677,6 +764,30 @@ flowchart LR
 
 Issues and PRs are welcome — especially new MCP tools, additional free-tier providers, and bug fixes. Please avoid submitting fully-automated web-injection scanning modules; keep contributions focused on authorized, defensible research tooling.
 
+## 📖 Glossary
+
+<details>
+<summary><b>Click to expand acronym reference</b></summary>
+<br/>
+
+| Term | Meaning |
+|:--|:--|
+| **MCP** | Model Context Protocol — the standard OCTA AI uses to expose 42 OS-level tools to the agent |
+| **OSINT** | Open-Source Intelligence — gathering info from publicly available sources |
+| **CVE** | Common Vulnerabilities and Exposures — standardized vulnerability identifiers |
+| **CVSS** | Common Vulnerability Scoring System — severity scoring (0–10) for a CVE |
+| **YARA** | Pattern-matching rule engine used for malware/file classification |
+| **TTS** | Text-to-Speech — voice synthesis, handled locally via Coqui |
+| **SSE** | Server-Sent Events — the streaming protocol behind word-by-word responses |
+| **WHOIS** | Domain registration lookup protocol |
+| **PoC** | Proof of Concept — a minimal exploit demonstrating a vulnerability |
+| **Ollama** | Local LLM runtime OCTA AI uses for unlimited, offline execution |
+| **ChromaDB** | The vector database powering OCTA AI's persistent memory |
+
+</details>
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:00C9FF,100:8E2DE2&height=3&width=100%25" width="100%"/>
+
 ## ❓ FAQ
 
 <details>
@@ -703,6 +814,18 @@ Other Debian/Ubuntu systems will partially work, since <code>setup.sh</code> use
 No — only at systems you own or have explicit written authorization to test. See the <a href="#-security-research-modules">Security Research Modules</a> warning above.
 </details>
 
+<details>
+<summary><b>Why does execution use tiny local models like <code>phi3:mini</code>?</b></summary>
+<br/>
+Speed and RAM footprint. The execution loop can run dozens of iterations per task, so small, fast local models keep that loop unlimited and responsive on modest hardware (8GB RAM). Discussion/Planning/Review lean on larger cloud models for reasoning quality where it matters most.
+</details>
+
+<details>
+<summary><b>What happens if every cloud provider is rate-limited at once?</b></summary>
+<br/>
+<code>call_ai()</code> exhausts up to 12 retries rotating through every key in the pool, then the agent transparently continues on local Ollama rather than erroring out — see <a href="#-how-the-router-works">How The Router Works</a>.
+</details>
+
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0:8E2DE2,100:00C9FF&height=3&width=100%25" width="100%"/>
 
 ## ⚖️ Legal Disclaimer
@@ -714,6 +837,22 @@ OCTA AI is designed for **authorized security research only**.
 - Digital forensics requires legal authorization
 - Malware analysis in isolated environments only
 - Never test systems without explicit permission
+
+---
+
+## 🌟 Support the Project
+
+<div align="center">
+
+If OCTA AI saved you money, time, or taught you something about agentic architecture — a star helps other researchers find it.
+
+<img src="https://img.shields.io/badge/⭐_Star_this_repo-FFD700?style=for-the-badge&labelColor=0d1117"/>
+<img src="https://img.shields.io/badge/🍴_Fork_&_extend_it-00d4ff?style=for-the-badge&labelColor=0d1117"/>
+<img src="https://img.shields.io/badge/🐛_Report_an_issue-ff2e88?style=for-the-badge&labelColor=0d1117"/>
+
+**Ways to help:** star the repo · open issues for bugs · contribute a new MCP tool · share it with another researcher · read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`USAGE.md`](USAGE.md) for the deeper docs.
+
+</div>
 
 ## 👨‍💻 Author
 
