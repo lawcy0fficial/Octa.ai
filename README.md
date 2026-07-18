@@ -10,7 +10,7 @@
 
 <br/>
 
-<img src="https://github.githubassets.com/images/mona-loading-default.gif" width="60"/>
+<img src="docs/octa-spinner.svg" width="60"/>
 
 <br/><br/>
 
@@ -710,7 +710,8 @@ octa-ai/
 ├── 📖 README.md            # This file (must stay in repo root)
 └── 📂 docs/
     ├── 🎬 octa-banner-animated.svg   # Animated hero banner (used by README)
-    └── 🎬 octa-pipeline-animated.svg # Animated agent-loop diagram (used by README)
+    ├── 🎬 octa-pipeline-animated.svg # Animated agent-loop diagram (used by README)
+    └── 🎬 octa-spinner.svg           # Small animated loading spinner (used by README)
 ```
 
 ---
@@ -879,7 +880,7 @@ MIT License — free for authorized security research and personal use. See [LIC
 
 <br/><br/>
 
-<img src="https://github.githubassets.com/images/mona-whisper.gif" width="50"/>
+<img src="docs/octa-spinner.svg" width="50"/>
 
 <br/><br/>
 
